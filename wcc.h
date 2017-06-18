@@ -57,7 +57,7 @@ enum wcc_axes {
 
 #define WCC_I2C_LENGTH 6
 
-static inline struct wcc_status i2c_to_btn(uint8_t c[6])
+static inline struct wcc_status i2c_to_btn(uint8_t c[WCC_I2C_LENGTH])
 {
     uint16_t btn;
     struct wcc_status stat;
@@ -80,7 +80,7 @@ static inline struct wcc_status i2c_to_btn(uint8_t c[6])
     return stat;
 }
 
-static inline void btn_to_i2c(uint8_t c[6], struct wcc_status *stat)
+static inline void btn_to_i2c(uint8_t c[WCC_I2C_LENGTH], struct wcc_status *stat)
 {
     uint16_t btn;
 
