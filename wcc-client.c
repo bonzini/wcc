@@ -24,36 +24,30 @@
 #include <linux/input.h>
 #include <linux/uinput.h>
 #include <linux/input-event-codes.h>
+#include "wcc.h"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-#define I2C_LENGTH 6
-
-struct wcc_status {
-    int8_t abs[8];
-
-    /* (BDR) (BDD) BLT B- | BH B+ BRT 1 | BZL BB BY BA | BX BZR (BDL) (BDU) */
-    uint16_t btn;
-};
-
-#define DPAD_X_POS 0x8000
-#define DPAD_X_NEG 0x0002
-#define DPAD_Y_POS 0x4000
-#define DPAD_Y_NEG 0x0001
-#define DPAD_MASK (DPAD_X_POS | DPAD_X_NEG | DPAD_Y_POS | DPAD_Y_NEG)
 
 static int16_t axes[8] = {
-    ABS_X, ABS_Y, -1, ABS_RX, ABS_RY, -1, ABS_HAT0X, ABS_HAT0Y
+    [WCC_ABS_LX] = ABS_X,
+    [WCC_ABS_LY] = ABS_Y,
+    [WCC_ABS_LT] = -1,
+    [WCC_ABS_RX] = ABS_RX,
+    [WCC_ABS_RY] = ABS_RY,
+    [WCC_ABS_RT] = -1,
+    [WCC_ABS_DPAD_X] = ABS_HAT0X,
+    [WCC_ABS_DPAD_Y] = ABS_HAT0Y
 };
 
 static struct input_absinfo absinfo[8] = {
-    { .minimum = 0, .maximum = 63 },
-    { .minimum = 0, .maximum = 63 },
-    { .minimum = 0, .maximum = 31 },
-    { .minimum = 0, .maximum = 31 },
-    { .minimum = 0, .maximum = 31 },
-    { .minimum = 0, .maximum = 31 },
-    { .minimum = -1, .maximum = 1 },
-    { .minimum = -1, .maximum = 1 },
+    [WCC_ABS_LX] = { .minimum = WCC_ABS_L_MIN, .maximum = WCC_ABS_L_MAX },
+    [WCC_ABS_LY] = { .minimum = WCC_ABS_L_MIN, .maximum = WCC_ABS_L_MAX },
+    [WCC_ABS_LT] = { .minimum = WCC_ABS_LT_MIN, .maximum = WCC_ABS_LT_MAX },
+    [WCC_ABS_RX] = { .minimum = WCC_ABS_R_MIN, .maximum = WCC_ABS_R_MAX },
+    [WCC_ABS_RY] = { .minimum = WCC_ABS_R_MIN, .maximum = WCC_ABS_R_MAX },
+    [WCC_ABS_RT] = { .minimum = WCC_ABS_RT_MIN, .maximum = WCC_ABS_RT_MAX },
+    [WCC_ABS_DPAD_X] = { .minimum = WCC_ABS_DPAD_MIN, .maximum = WCC_ABS_DPAD_MAX },
+    [WCC_ABS_DPAD_Y] = { .minimum = WCC_ABS_DPAD_MIN, .maximum = WCC_ABS_DPAD_MAX },
 };
 
 static int16_t buttons[16] = {
@@ -63,28 +57,6 @@ static int16_t buttons[16] = {
     BTN_SELECT, BTN_TL, -1, -1,
 };
     
-static struct wcc_status i2c_to_btn(uint8_t c[6])
-{
-    uint16_t btn;
-    struct wcc_status stat;
-    stat.abs[0] = (c[0] & 63);
-    stat.abs[1] = (c[1] & 63);
-    stat.abs[2] = (c[2] & 96) >> 2;
-    stat.abs[2] |= (c[3] >> 5);
-    stat.abs[3] = (c[0] >> 6) << 3;
-    stat.abs[3] |= (c[1] >> 6) << 1;
-    stat.abs[3] |= (c[2] >> 7);
-    stat.abs[4] = (c[2] & 31);
-    stat.abs[5] = (c[3] & 31);
-
-    btn = ((c[4] << 8) | c[5]);
-    stat.btn = btn & ~DPAD_MASK;
-    stat.abs[6] = !!(btn & DPAD_X_POS) - !!(btn & DPAD_X_NEG);
-    stat.abs[7] = !!(btn & DPAD_Y_POS) - !!(btn & DPAD_Y_NEG);
-
-    return stat;
-}
-
 static struct wcc_status curr;
 
 void send_abs_to_uinput(int fd, int axis, int curr, int new)
@@ -211,9 +183,9 @@ int main()
     int uinput_fd = init_uinput();
 
     while (1) {
-        uint8_t i2c_input[I2C_LENGTH];
-        int r = read(0, i2c_input, I2C_LENGTH);
-        if (r != I2C_LENGTH) {
+        uint8_t i2c_input[WCC_I2C_LENGTH];
+        int r = read(0, i2c_input, WCC_I2C_LENGTH);
+        if (r != WCC_I2C_LENGTH) {
             if (r < 0 && errno == EINTR)
                 continue;
             if (r == 0)
