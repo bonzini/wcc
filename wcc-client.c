@@ -60,7 +60,7 @@ static int16_t buttons[16] = {
 static struct wcc_status curr;
 
 #define write_event(fd, type, code, value) write_event_(fd, #type, type, code, value)
-void write_event_(int fd, const char *name, int type, int code, int value)
+static void write_event_(int fd, const char *name, int type, int code, int value)
 {
     struct input_event event = {
         .type = type,
@@ -75,7 +75,7 @@ void write_event_(int fd, const char *name, int type, int code, int value)
         perror(name);
 }
 
-bool send_abs_to_uinput(int fd, int axis, int curr, int new)
+static bool send_abs_to_uinput(int fd, int axis, int curr, int new)
 {
     if (curr == new)
         return false;
@@ -84,16 +84,16 @@ bool send_abs_to_uinput(int fd, int axis, int curr, int new)
     return true;
 }
 
-bool send_btn_to_uinput(int fd, int axis, bool curr, int new)
+static bool send_btn_to_uinput(int fd, int btn, bool curr, int new)
 {
     if (curr == new)
         return false;
 
-    write_event(fd, EV_KEY, axis, new);
+    write_event(fd, EV_KEY, btn, new);
     return true;
 }
 
-bool send_to_uinput(int fd, struct wcc_status new)
+static bool send_to_uinput(int fd, struct wcc_status new)
 {
     int i;
     int changes = 0;
@@ -114,7 +114,7 @@ bool send_to_uinput(int fd, struct wcc_status new)
 }
 
 #define uinput_ioctl(fd, ioc, ptr) uinput_ioctl_(fd, #ioc, ioc, ptr)
-void uinput_ioctl_(int fd, char *name, int ioc, void *ptr)
+static void uinput_ioctl_(int fd, char *name, int ioc, void *ptr)
 {
     if (ioctl(fd, ioc, ptr) < 0) {
         perror(name);
@@ -123,7 +123,7 @@ void uinput_ioctl_(int fd, char *name, int ioc, void *ptr)
 }
 
 #define uinput_ioctl_int(fd, ioc, val) uinput_ioctl_int_(fd, #ioc, ioc, val)
-void uinput_ioctl_int_(int fd, char *name, int ioc, int val)
+static void uinput_ioctl_int_(int fd, char *name, int ioc, int val)
 {
     if (ioctl(fd, ioc, val) < 0) {
         perror(name);
@@ -131,7 +131,7 @@ void uinput_ioctl_int_(int fd, char *name, int ioc, int val)
     }
 }
 
-void uinput_abs_setup(int fd, int axis, struct input_absinfo absinfo)
+static void uinput_abs_setup(int fd, int axis, struct input_absinfo absinfo)
 {
     uinput_ioctl_int(fd, UI_SET_ABSBIT, axis);
     struct uinput_abs_setup uas = {
@@ -147,7 +147,7 @@ static char *uinput_filename[] = {
     "/dev/misc/uinput"
 };
 
-int init_uinput(void)
+static int init_uinput(void)
 {
     int fd, i;
     
