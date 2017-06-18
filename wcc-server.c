@@ -44,8 +44,8 @@ static int16_t axes[8] = {
 static int16_t buttons[16] = {
     KEY_UP, KEY_LEFT, KEY_V, KEY_W,
     KEY_Z, KEY_A, KEY_S, KEY_C,
-    -1, KEY_F, KEY_1, KEY_ESC,
-    KEY_2, KEY_D, KEY_DOWN, KEY_RIGHT,
+    -1, KEY_F, KEY_2, KEY_ESC,
+    KEY_1, KEY_D, KEY_DOWN, KEY_RIGHT,
 };
 
 /* Leave the sticks in the middle */
