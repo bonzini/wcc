@@ -59,53 +59,58 @@ static int16_t buttons[16] = {
     
 static struct wcc_status curr;
 
-void send_abs_to_uinput(int fd, int axis, int curr, int new)
+#define write_event(fd, type, code, value) write_event_(fd, #type, type, code, value)
+void write_event_(int fd, const char *name, int type, int code, int value)
 {
-    if (curr == new)
-        return;
-
     struct input_event event = {
-        .type = EV_ABS,
-        .code = axis,
-        .value = new
+        .type = type,
+        .code = code,
+        .value = value
     };
-
     int r;
     do
         r = write(fd, &event, sizeof(event));
     while (r < 0 && errno == EINTR);
     if (r != sizeof(event))
-        perror("EV_ABS");
+        perror(name);
 }
 
-void send_btn_to_uinput(int fd, int axis, bool curr, int new)
+bool send_abs_to_uinput(int fd, int axis, int curr, int new)
 {
     if (curr == new)
-        return;
+        return false;
 
-    struct input_event event = {
-        .type = EV_KEY,
-        .code = axis,
-        .value = new
-    };
-
-    if (write(fd, &event, sizeof(event)) != sizeof(event))
-        perror("EV_KEY");
+    write_event(fd, EV_ABS, axis, new);
+    return true;
 }
 
-void send_to_uinput(int fd, struct wcc_status new)
+bool send_btn_to_uinput(int fd, int axis, bool curr, int new)
+{
+    if (curr == new)
+        return false;
+
+    write_event(fd, EV_KEY, axis, new);
+    return true;
+}
+
+bool send_to_uinput(int fd, struct wcc_status new)
 {
     int i;
+    int changes = 0;
+
     for (i = 0; i < ARRAY_SIZE(axes); i++)
         if (axes[i] >= 0)
-            send_abs_to_uinput(fd, axes[i], curr.abs[i], new.abs[i]);
+            changes += send_abs_to_uinput(fd, axes[i], curr.abs[i], new.abs[i]);
     for (i = 0; i < ARRAY_SIZE(buttons); i++)
         if (buttons[i] >= 0) {
             bool btn_old = !!(curr.btn & (1 << i));
             bool btn_new = !!(new.btn & (1 << i));
-            send_btn_to_uinput(fd, buttons[i], btn_old, btn_new);
+            changes += send_btn_to_uinput(fd, buttons[i], btn_old, btn_new);
         }
+
     curr = new;
+    if (changes)
+        write_event(fd, EV_SYN, SYN_REPORT, 0);
 }
 
 #define uinput_ioctl(fd, ioc, ptr) uinput_ioctl_(fd, #ioc, ioc, ptr)
