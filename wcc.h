@@ -16,7 +16,7 @@ enum wcc_buttons {
     WCC_BHOME  = 0x0800,
     WCC_BPLUS  = 0x0400,
     WCC_BRT    = 0x0200,
-    WCC_FIXED  = 0x0100,
+    WCC_FIXED0 = 0x0100,
     WCC_BZL    = 0x0080,
     WCC_BB     = 0x0040,
     WCC_BY     = 0x0020,
@@ -72,7 +72,7 @@ static inline struct wcc_status i2c_to_btn(uint8_t c[6])
     stat.abs[4] = (c[2] & 31);
     stat.abs[5] = (c[3] & 31);
 
-    btn = ((c[4] << 8) | c[5]);
+    btn = ~((c[4] << 8) | c[5]);
     stat.btn = btn & ~WCC_DPAD_MASK;
     stat.abs[6] = !!(btn & WCC_DPAD_X_POS) - !!(btn & WCC_DPAD_X_NEG);
     stat.abs[7] = !!(btn & WCC_DPAD_Y_POS) - !!(btn & WCC_DPAD_Y_NEG);
@@ -94,7 +94,7 @@ static inline void btn_to_i2c(uint8_t c[6], struct wcc_status *stat)
     c[2] |= stat->abs[4] & 31;
     c[3] |= stat->abs[5] & 31;
 
-    btn = stat->btn | WCC_FIXED;
+    btn = ~stat->btn;
     c[4] = btn >> 8;
     c[5] = btn & 255;
 }
