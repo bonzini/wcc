@@ -26,8 +26,8 @@
 #include <linux/input-event-codes.h>
 #include "wcc.h"
 
-// #define TIMEOUT INFTIM
-#define TIMEOUT 10
+#define TIMEOUT -1
+// #define TIMEOUT 10
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
