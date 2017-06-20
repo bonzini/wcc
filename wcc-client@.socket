@@ -1,0 +1,5 @@
+[Socket]
+ListenDatagram=0.0.0.0:%i
+
+[Install]
+WantedBy=network.target

@@ -1,0 +1,7 @@
+[Unit]
+Exec=/storage/bin/wcc-client
+StandardInput=socket
+StandardOutput=journal
+
+[Install]
+WantedBy=network.target
