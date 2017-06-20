@@ -104,10 +104,12 @@ int main(int argc, char **argv)
                 perror("read");
                 exit(1);
             }
-            if (e.type == EV_KEY && e.value <= 1) {
+            if (e.type == EV_KEY && e.value <= 1)
                 got_key(e.code, e.value);
+            if (e.type == EV_SYN && e.code == SYN_REPORT)
                 btn_to_i2c(i2c_data, &status);
-            }
+            else
+                continue;
         }
 
         int r = write(1, i2c_data, WCC_I2C_LENGTH);
