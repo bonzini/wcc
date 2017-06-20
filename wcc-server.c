@@ -8,7 +8,7 @@
  * License: GPLv2+
  *
  * To test, run this as root:
- *    ./wcc-server /dev/input/eventNN | socat STDIO UDP-SENDTO:localhost:40000
+ *    ./wcc-server /dev/input/eventNN > /dev/udp/other-host/40000
  *
  * where /dev/input/eventNN is a keyboard device, and on another computer:
  *    systemd-socket-activate --inetd -d -l0.0.0.0:40000 ./wcc-client
