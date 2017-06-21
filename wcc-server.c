@@ -93,6 +93,8 @@ int main(int argc, char **argv)
     btn_to_i2c(i2c_data, &status);
     while (1) {
         poll(&pfd, 1, TIMEOUT);
+        if (pfd.revents & POLLHUP)
+            exit(0);
         if (pfd.revents & POLLIN) {
             struct input_event e;
             int r = read(input_fd, &e, sizeof(e));
