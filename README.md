@@ -16,8 +16,9 @@ connects to /dev/input/eventNN and converts keypresses to I2C packets.
 
 The next steps include:
 
-* adding Retroarch configuration files for the virtual gamepad,
-which already lets me play games using my laptop.
+* adding support for analog sticks, which requires wcc-client to
+calibrate them on startup (and perhaps also when the HOME key is
+pressed, as an emergency measure)
 
 * writing the ESP8266 software
 
