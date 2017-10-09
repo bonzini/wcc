@@ -33,8 +33,4 @@ to the stored SSID will trigger the configuration portal too.
 
 The next steps include:
 
-* adding support for analog sticks, which requires wcc-client to
-calibrate them on startup (and perhaps also when the HOME key is
-pressed, as an emergency measure)
-
 * building a nice enclosure for the thing
