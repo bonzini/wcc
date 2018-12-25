@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -150,6 +151,8 @@ static char *uinput_filename[] = {
 static int init_uinput(void)
 {
     int fd, i;
+    int version;
+    int rc;
     
     for (i = 0; i < ARRAY_SIZE(uinput_filename); i++) {
         do
@@ -163,6 +166,14 @@ static int init_uinput(void)
         exit(1);
     }
 
+    rc = ioctl(fd, UI_GET_VERSION, &version);
+    if (rc < 0) {
+        version = 0;
+    }
+
+    uinput_ioctl_int(fd, UI_SET_EVBIT, EV_ABS);
+    uinput_ioctl_int(fd, UI_SET_EVBIT, EV_KEY);
+
     struct uinput_setup dev = {
         .id.bustype = BUS_USB,
         .id.vendor = 0x1b36,
@@ -170,12 +181,25 @@ static int init_uinput(void)
         .id.version = 1,
         .name = "Wii Classic Controller over UDP",
     };
-    uinput_ioctl(fd, UI_DEV_SETUP, &dev);
-    uinput_ioctl_int(fd, UI_SET_EVBIT, EV_ABS);
-    for (i = 0; i < ARRAY_SIZE(axes); i++)
-        if (axes[i] >= 0)
-            uinput_abs_setup(fd, axes[i], absinfo[i]);
-    uinput_ioctl_int(fd, UI_SET_EVBIT, EV_KEY);
+    if (version < 5) {
+        struct uinput_user_dev uud;
+        memset(&uud, 0, sizeof(uud));
+        uud.id = dev.id;
+        strcpy(uud.name, dev.name);
+        for (i = 0; i < ARRAY_SIZE(axes); i++) {
+            if (axes[i] >= 0) {
+                uinput_ioctl_int(fd, UI_SET_ABSBIT, axes[i]);
+                uud.absmax[axes[i]] = absinfo[i].maximum;
+                uud.absmin[axes[i]] = absinfo[i].minimum;
+            }
+        }
+        write(fd, &uud, sizeof(uud));
+    } else {
+        ioctl(fd, UI_DEV_SETUP, &dev);
+        for (i = 0; i < ARRAY_SIZE(axes); i++)
+            if (axes[i] >= 0)
+                uinput_abs_setup(fd, axes[i], absinfo[i]);
+    }
     for (i = 0; i < ARRAY_SIZE(buttons); i++)
         if (buttons[i] >= 0)
             uinput_ioctl_int(fd, UI_SET_KEYBIT, buttons[i]);
